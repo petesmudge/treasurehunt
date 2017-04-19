@@ -48,7 +48,8 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:layout_alignBaseline="@+id/chronometer2"
         android:layout_alignBottom="@+id/chronometer2"
-        android:textColor="?attr/colorPrimaryDark" />
+        android:textColor="?attr/colorPrimaryDark"
+        android:layout_marginBottom="2dp"/>
 
     <!-- <TextView
         android:text="Where is it?"
@@ -78,9 +79,20 @@
         android:id="@+id/testbutton" /> -->
 
     <LinearLayout
+        android:id="@+id/QuestionLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/QuestionNum"
-        android:id="@+id/QuestionLayout"/>
+        android:layout_alignTop="@+id/QuestionNum"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/nextQuestionBut"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/QuestionLayout"
+        android:layout_alignParentBottom="true"
+        android:layout_weight="1"
+        android:text="Next Question -->"
+        android:visibility="invisible" />
 
 </RelativeLayout>
