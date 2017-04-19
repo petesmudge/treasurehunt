@@ -9,6 +9,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import static com.example.petersmith.treasurehunt.R.color.colorRight;
+
 /**
  * Created by peter.smith on 19/04/2017.
  */
@@ -20,7 +22,7 @@ class TextQuestion extends QuestionData{
     public void renderQuestion(final MainActivity activity, LinearLayout layout){
         //set a layout to the passed in layout
         LayoutInflater inflater = LayoutInflater.from(activity);
-        View inflatedLayout= inflater.inflate(R.layout.text_question, null, false);
+        final View inflatedLayout= inflater.inflate(R.layout.text_question, null, false);
         if (layout.getChildCount() > 0) {
             layout.removeView(layout.getFocusedChild());
         }
@@ -31,14 +33,25 @@ class TextQuestion extends QuestionData{
 
         final EditText answer = (EditText) inflatedLayout.findViewById(R.id.answerText);
         Button answerButt = (Button) inflatedLayout.findViewById(R.id.answerButton);
+
         answerButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
                         if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
-                            activity.updateQuestion();
+                            result.setBackgroundColor(activity.getColor(R.color.colorRight));
+                            result.setText("CORRECT");
+                            result.setVisibility(View.VISIBLE);
+                            activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
+                        }
+                        else
+                        {
+                            result.setBackgroundColor(activity.getColor(R.color.colorWrong));
+                            result.setText("WRONG!");
+                            result.setVisibility(View.VISIBLE);
                         }
                     }
                 });

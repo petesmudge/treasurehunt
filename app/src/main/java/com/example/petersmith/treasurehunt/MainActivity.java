@@ -59,19 +59,19 @@ public class MainActivity extends AppCompatActivity {
 
         updateQuestion();
 
-        /*test button to push through questions - test only */
-        /*Button testbutton = (Button) findViewById(R.id.testbutton);
-        testbutton.setOnClickListener(new View.OnClickListener() {
+        final Button nextQuestionBut = (Button) findViewById(R.id.nextQuestionBut);
+        nextQuestionBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        nextQuestionBut.setVisibility(View.INVISIBLE);
                         updateQuestion();
                     }
                 });
             }
-        });*/
+        });
 
         mTimer = (Chronometer) findViewById(R.id.chronometer2);
         mTimer.start();
@@ -107,7 +107,10 @@ public class MainActivity extends AppCompatActivity {
         //}
     }
 
-    public void updateQuestion() {
+
+
+
+    private void updateQuestion() {
         if (mHuntData.notFinished()) {
             QuestionData q = mHuntData.getNextQuestion();
             q.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));

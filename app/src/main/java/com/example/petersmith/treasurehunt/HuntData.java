@@ -10,10 +10,10 @@ public class HuntData {
 
     //Temporary structure for questions
     private QuestionData[] mData = {
-                new TextQuestion("What is the question?", "That is the answer!"),
-                new TextQuestion("What is the question2?", "That is the answer2!"),
-                new TextQuestion("What is the question3?", "That is the answer3!"),
-                new TextQuestion("What is the question4?", "That is the answer4!"),
+                new TextQuestion("What is your name?", "Rebecca"),
+                new TextQuestion("What is your hair colour?", "brown"),
+                new TextQuestion("What is your brother's name?", "Adam"),
+                new TextQuestion("How old are you?", "6"),
         };
 
     private int mNumber;
