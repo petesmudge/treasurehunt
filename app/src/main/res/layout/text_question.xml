@@ -10,8 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
         android:id="@+id/QuestionText"
-        android:layout_below="@+id/QuestionNum"
-        android:layout_alignStart="@+id/QuestionNum" />
+    />
 
     <EditText
         android:id="@+id/answerText"
@@ -22,16 +21,6 @@
         android:layout_marginTop="22dp"
         android:ems="10"
         android:inputType="textPersonName" />
-
-
-    <Button
-        android:id="@+id/answerButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/answerText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="13dp"
-        android:text="Submit" />
 
 
     <TextView

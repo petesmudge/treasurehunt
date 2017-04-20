@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     //private FirebaseAuth.AuthStateListener mAuthListener;
 
 
-    String TAG = "TreasureHunt";
+    private static final String TAG = "TreasureHunt";
 
     HuntData mHuntData;
     TextView mQuestion;
