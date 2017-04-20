@@ -2,14 +2,16 @@ package com.example.petersmith.treasurehunt;
 
 import android.app.Activity;
 import android.content.Context;
+import android.text.Editable;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import static com.example.petersmith.treasurehunt.R.color.colorRight;
 
 /**
  * Created by peter.smith on 19/04/2017.
@@ -17,6 +19,7 @@ import static com.example.petersmith.treasurehunt.R.color.colorRight;
 
 class TextQuestion extends QuestionData{
 
+    private static final String TAG = "TextQuestion";
     //called on UI thread.
     @Override
     public void renderQuestion(final MainActivity activity, LinearLayout layout){
@@ -32,29 +35,31 @@ class TextQuestion extends QuestionData{
         questionText.setText(mQuestion);
 
         final EditText answer = (EditText) inflatedLayout.findViewById(R.id.answerText);
-        Button answerButt = (Button) inflatedLayout.findViewById(R.id.answerButton);
 
-        answerButt.setOnClickListener(new View.OnClickListener() {
+        answer.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void onClick(View v) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
-                        if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
-                            result.setBackgroundColor(activity.getColor(R.color.colorRight));
-                            result.setText("CORRECT");
-                            result.setVisibility(View.VISIBLE);
-                            activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                Log.d(TAG, "onEditorAction " + actionId + ", " + keyEvent);
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d(TAG, "onEditorAction" + answer.getText().toString());
+                            TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+                            if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
+                                result.setBackgroundColor(activity.getColor(R.color.colorRight));
+                                result.setText("CORRECT");
+                                result.setVisibility(View.VISIBLE);
+                                activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
+                            } else {
+                                result.setBackgroundColor(activity.getColor(R.color.colorWrong));
+                                result.setText("WRONG!");
+                                result.setVisibility(View.VISIBLE);
+                            }
                         }
-                        else
-                        {
-                            result.setBackgroundColor(activity.getColor(R.color.colorWrong));
-                            result.setText("WRONG!");
-                            result.setVisibility(View.VISIBLE);
-                        }
-                    }
-                });
+                    });
+                }
+                return false;
             }
         });
 
