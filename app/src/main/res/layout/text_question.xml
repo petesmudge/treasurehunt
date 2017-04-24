@@ -5,12 +5,12 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:text="Where is it?"
+        android:id="@+id/QuestionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:id="@+id/QuestionText"
-    />
+        android:text="Where is it?"
+        android:textSize="24sp" />
 
     <EditText
         android:id="@+id/answerText"
@@ -37,9 +37,7 @@
         android:id="@+id/resultText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/answerButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="26dp"
+        android:layout_marginTop="76dp"
         android:background="@color/colorWrong"
         android:padding="8dp"
         android:text="TextView"
@@ -47,6 +45,8 @@
         android:textColor="@android:color/white"
         android:textSize="30sp"
         android:textStyle="bold"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:layout_below="@+id/answerText"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

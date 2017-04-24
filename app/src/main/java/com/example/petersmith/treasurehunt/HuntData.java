@@ -9,51 +9,41 @@ import static com.example.petersmith.treasurehunt.QuestionData.QuestionType.Q_TE
 public class HuntData {
 
     //Temporary structure for questions
-    private QuestionData[] mData = {
+    /*private QuestionData[] mData = {
                 new TextQuestion("What is your name?", "Rebecca"),
                 new TextQuestion("What is your hair colour?", "brown"),
                 new TextQuestion("What is your brother's name?", "Adam"),
                 new TextQuestion("How old are you?", "6"),
-        };
+        };*/
+    /*
+    //beacon1
+        mBeaconScan.setAddress("DC:9F:31:59:12:F5");
+    //myShine
+        mBeaconScan.setAddress("C3:04:41:50:7C:4B");
+     */
+    private QuestionData[] mData = {
+            new BeaconQuestion("What is your name?", "Adam","find Daddy to get question","C3:04:41:50:7C:4B"),
+            new BeaconQuestion("How old are you?", "4","find car seat","DC:9F:31:59:12:F5"),
+            new TextQuestion("What colour is Daddy's car?", "black"),
+            new TextQuestion("What is your sisters name?", "Rebecca")
+    };
 
-    private int mNumber;
+    private int mIndex;
     private boolean mFirst = true;
     private boolean mFinished = false;
-    private boolean mReversed = false;
-
-    private void InitHunt(boolean isReversed){
-        mFirst = true;
-        mFinished = false;
-        mReversed = isReversed;
-        if (mReversed) {
-            mNumber = mData.length;
-        } else {
-            mNumber = 1;
-        }
-    }
-
-
-    /* constructor */
-    HuntData(boolean isReversed) {
-        InitHunt(isReversed);
-    }
 
     /* default constructor - not reversed */
-    HuntData() {
-        this(false);
+    HuntData(){
+        mFinished = false;
+        mIndex = -1;
     }
 
     /* Accessor functions */
     public QuestionData getNextQuestion(){
         QuestionData q = null;
-        if(notFinished())
+        if(++mIndex < mData.length)
         {
-            if(!mFirst) {
-                 mNumber++;
-            }
-            mFirst=false;
-
-            q= mData[getNumber() - 1];
+            q= mData[mIndex];
         }
         else
         {
@@ -63,23 +53,15 @@ public class HuntData {
     }
 
     public int getNumber(){
-        int num = mNumber;
-        if(mReversed){
-            num = (mData.length - mNumber) + 1;
-        }
-        return num;
+        return mIndex +1;
     }
 
     public int getProgress(){
-        int val =((mNumber-1) * 100) / mData.length;
+        int val =(mIndex * 100) / mData.length;
         if(mFinished){
             val = 100;
         }
         return val;
-    }
-
-    public boolean notFinished(){
-        return ( mNumber < mData.length );
     }
 
 }

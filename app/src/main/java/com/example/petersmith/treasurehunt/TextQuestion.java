@@ -66,10 +66,6 @@ class TextQuestion extends QuestionData{
 
     }
 
-    private void checkAnswer(String string){
-
-    };
-
     TextQuestion(String question,String answer)
     {
         initData(question,answer);

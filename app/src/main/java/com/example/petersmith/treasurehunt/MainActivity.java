@@ -1,6 +1,17 @@
 package com.example.petersmith.treasurehunt;
 
+import android.*;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,11 +44,19 @@ public class MainActivity extends AppCompatActivity {
     TextView mQuestionNum;
     Chronometer mTimer;
     ProgressBar mProgress;
+    HighScoresDb mHighScores;
+
+    SharedPreferences mPrefs;
+    public static final String PREFS_NAME = "treasurehunt_prefs";
+
+    //For BT/Beacon
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private static final int PERMISSION_REQUEST_COARSE_BL = 2;
 
     //From Firebase
-    DatabaseReference mRemotePlayersRef;
+    /*DatabaseReference mRemotePlayersRef;
     int mNumPlayers = 0;
-    int MAX_PLAYERS = 2;
+    int MAX_PLAYERS = 2;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +67,30 @@ public class MainActivity extends AppCompatActivity {
         /* Initialise database */
         //Remote
         //setupFirebase();
+
+        /* check capabilities */
+        checkLocBT();
+        checkBT();
+
         /* Load Quiz */
         mHuntData = new HuntData();
+
+        // For settings (not yet used)
+        mPrefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        //Database:
+        mHighScores = new HighScoresDb(this);
+
 
         /*Render initial question */
         //mQuestion = (TextView) findViewById(R.id.QuestionText);
         //mAnswer = (TextView) findViewById(R.id.AnswerText);
         mQuestionNum = (TextView) findViewById(R.id.QuestionNum);
         mProgress = (ProgressBar) findViewById(R.id.progressBar1);
+
+        mTimer = (Chronometer) findViewById(R.id.chronometer2);
+        mTimer.start();
+
 
         updateQuestion();
 
@@ -73,8 +108,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mTimer = (Chronometer) findViewById(R.id.chronometer2);
-        mTimer.start();
 
     }
 
@@ -111,8 +144,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void updateQuestion() {
-        if (mHuntData.notFinished()) {
-            QuestionData q = mHuntData.getNextQuestion();
+        QuestionData q = mHuntData.getNextQuestion();
+        if (q != null) {
             q.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
             int a = mHuntData.getNumber();
             mQuestionNum.setText(Integer.toString(a));
@@ -121,11 +154,98 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "You have finished!", Toast.LENGTH_SHORT).show();
             mTimer.stop();
             /*Store time somewhere? */
+            SQLiteDatabase db = mHighScores.getWritableDatabase();
+            //Add check for DB size TODO
+            ContentValues vals = new ContentValues();
+            vals.put(ScoresContract.ScoresEntry.PLAYER_NAME, "Adam");
+            vals.put(ScoresContract.ScoresEntry.PLAYER_TIME, (String) mTimer.getText());
+            db.insert(ScoresContract.ScoresEntry.TABLE_NAME,null,vals);
             updateProgress(100);
+
+            Intent StartScoresActivity = new Intent(MainActivity.this, ScoresActivity.class);
+            startActivity(StartScoresActivity);
         }
     }
 
     private void updateProgress(int progress){ mProgress.setProgress(progress);}
+
+    //BT stuff
+    private BluetoothAdapter mBTAdapter;
+
+    private void checkBT(){
+        //Check if device does support BT by hardware
+        if (!getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
+            //Toast shows a message on the screen for a LENGTH_SHORT period
+            Toast.makeText(this, "BLUETOOTH NOT SUPPORTED!", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+        //Check if device does support BT Low Energy by hardware. Else close the app(finish())!
+        if (!getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            //Toast shows a message on the screen for a LENGTH_SHORT period
+            Toast.makeText(this, "BLE NOT SUPPORTED!", Toast.LENGTH_SHORT).show();
+            finish();
+        }else {
+            //If BLE is supported, get the BT adapter. Preparing for use!
+            mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+            //If getting the adapter returns error, close the app with error message!
+            if (mBTAdapter == null) {
+                Toast.makeText(this, "ERROR GETTING BLUETOOTH ADAPTER!", Toast.LENGTH_SHORT).show();
+                finish();
+            }else{
+                //Check if BT is enabled! This method requires BT permissions in the manifest.
+                if (!mBTAdapter.isEnabled()) {
+                    //If it is not enabled, ask user to enable it with default BT enable dialog! BT enable response will be received in the onActivityResult method.
+                    Intent enableBTintent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableBTintent, PERMISSION_REQUEST_COARSE_BL);
+                }
+            }
+        }
+    }
+
+    @TargetApi(23)
+    private void checkLocBT(){
+        //If Android version is M (6.0 API 23) or newer, check if it has Location permissions
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if(this.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                //If Location permissions are not granted for the app, ask user for it! Request response will be received in the onRequestPermissionsResult.
+                requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+            }
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
+        //Check if permission request response is from Location
+        switch (requestCode) {
+            case PERMISSION_REQUEST_COARSE_LOCATION: {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //User granted permissions. Setup the scan settings
+                    Log.d("TAG", "coarse location permission granted");
+                } else {
+                    //User denied Location permissions. Here you could warn the user that without
+                    //Location permissions the app is not able to scan for BLE devices and eventually
+                    //Close the app
+                    Toast.makeText(this, "Can't run without Bluetooth!", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //Check if the response is from BT
+        if(requestCode == PERMISSION_REQUEST_COARSE_BL){
+            // User chose not to enable Bluetooth.
+            if (resultCode == Activity.RESULT_CANCELED) {
+                finish();
+                return;
+            }
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
 
 // Irrelevant junk
 /*

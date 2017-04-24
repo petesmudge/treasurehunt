@@ -1,5 +1,6 @@
 package com.example.petersmith.treasurehunt;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -7,8 +8,13 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
+import android.support.annotation.RequiresPermission;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import static android.util.Xml.parse;
 
@@ -22,18 +28,25 @@ import static android.util.Xml.parse;
  *          callback()  <-- scan results to caller.
  *          Stop() <-- stop scan
  */
-/*
+
 public class BeaconScan {
 
     private BluetoothLeScanner mScanner;
     private ScanSettings mScanSettings;
+    private ProxCallback mCallback;
+    private String mUuid,mAddress;
+    private static final String TAG = "BeaconScan";
 
+    BeaconScan(ProxCallback callback) {
+        //mContext = getBaseContext();
+        mUuid = "";
+        mCallback = callback;
+    }
 
+    public void initBT(Context context){
 
-    private void initBT(){
-        final BluetoothManager bluetoothManager =  (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothManager bluetoothManager =  (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-
 
         //Create the scan settings
         ScanSettings.Builder scanSettingsBuilder = new ScanSettings.Builder();
@@ -45,7 +58,15 @@ public class BeaconScan {
         mScanner = bluetoothAdapter.getBluetoothLeScanner();
     }
 
-    private void startLeScan(boolean start) {
+    public void setUuid(String uuid){
+        mUuid = uuid;
+    }
+
+    public void setAddress(String address){
+        mAddress = address;
+    }
+
+    public void startLeScan(boolean start) {
         if (start) {
             //********************
             //START THE BLE SCAN
@@ -67,19 +88,12 @@ public class BeaconScan {
             //Convert advertising bytes to string for a easier parsing. GetBytes may return a NullPointerException. Treat it right(try/catch).
             String advertisingString = byteArrayToHex(result.getScanRecord().getBytes());
             //Print the advertising String in the LOG with other device info (ADDRESS - RSSI - ADVERTISING - NAME)
-            Log.i(TAG, result.getDevice().getAddress()+" - RSSI: "+result.getRssi()+"\t - "+advertisingString+" - "+result.getDevice().getName());
+            //Log.i(TAG, result.getDevice().getAddress()+" - RSSI: "+result.getRssi()+"\t - "+advertisingString+" - "+result.getDevice().getName());
 
-            Log.i(TAG,"UID = "+ mUuid);
-            if (advertisingString.contains(mUuid.replace("-",""))) {
-                if (result.getRssi() > dist) {
-                    if(counter == 0){
-                        counter = 5;
-                        startAnim.interrupt();
-                        wave.clearAnimation();
-                        wave.setVisibility(View.INVISIBLE);
-                        showDialog();
-                    }
-                }
+            //Log.i(TAG,"UID = "+ mUuid);
+            //if (advertisingString.contains(mUuid.replace("-",""))) {
+              if(result.getDevice().getAddress().contains(mAddress) && advertisingString.contains(mUuid.replace("-",""))) {
+                mCallback.CallbackRssi(result.getRssi());
             }
         }
     };
@@ -92,4 +106,3 @@ public class BeaconScan {
         return sb.toString();
     }
 }
-*/
