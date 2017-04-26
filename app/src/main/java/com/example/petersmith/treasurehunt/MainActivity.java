@@ -15,6 +15,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.view.ActionMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,13 +25,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.*;
-import com.google.firebase.database.*;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoadedCallback {
 
     //private FirebaseAuth mAuth;
     //private FirebaseAuth.AuthStateListener mAuthListener;
@@ -73,10 +68,12 @@ public class MainActivity extends AppCompatActivity {
         checkBT();
 
         /* Load Quiz */
-        mHuntData = new HuntData();
+        mHuntData = new HuntData(this);
 
         // For settings (not yet used)
         mPrefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String str = mPrefs.getString(getString(R.string.username),"Nobody");
+        this.setTitle(str + "'s Treasure Hunt");
 
         //Database:
         mHighScores = new HighScoresDb(this);
@@ -91,23 +88,16 @@ public class MainActivity extends AppCompatActivity {
         mTimer = (Chronometer) findViewById(R.id.chronometer2);
         mTimer.start();
 
-
-        updateQuestion();
-
         final Button nextQuestionBut = (Button) findViewById(R.id.nextQuestionBut);
         nextQuestionBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        nextQuestionBut.setVisibility(View.INVISIBLE);
-                        updateQuestion();
-                    }
-                });
+                nextQuestionBut.setVisibility(View.INVISIBLE);
+                updateQuestion();
             }
         });
 
+        //Question is "updated" when huntdata is loaded (below)
 
     }
 
@@ -140,11 +130,15 @@ public class MainActivity extends AppCompatActivity {
         //}
     }
 
+    //always called from UI Thread.
+    public void IsLoaded(){
+        updateQuestion();
+    }
 
 
-
-    private void updateQuestion() {
+    void updateQuestion() {
         QuestionData q = mHuntData.getNextQuestion();
+        long currentRow = 0;
         if (q != null) {
             q.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
             int a = mHuntData.getNumber();
@@ -156,12 +150,18 @@ public class MainActivity extends AppCompatActivity {
             /*Store time somewhere? */
             SQLiteDatabase db = mHighScores.getWritableDatabase();
             //Add check for DB size TODO
+
             ContentValues vals = new ContentValues();
-            vals.put(ScoresContract.ScoresEntry.PLAYER_NAME, "Adam");
+            vals.put(ScoresContract.ScoresEntry.PLAYER_NAME, mPrefs.getString(getString(R.string.username),"Nobody"));
             vals.put(ScoresContract.ScoresEntry.PLAYER_TIME, (String) mTimer.getText());
-            db.insert(ScoresContract.ScoresEntry.TABLE_NAME,null,vals);
+            //keep a reference to the current time
+            currentRow = db.insert(ScoresContract.ScoresEntry.TABLE_NAME,null,vals);
+            SharedPreferences.Editor editor = mPrefs.edit();
+            editor.putString(getString(R.string.currentRow), Long.toString(currentRow));
+            editor.apply();
             updateProgress(100);
 
+            // Jump to Top scores screen
             Intent StartScoresActivity = new Intent(MainActivity.this, ScoresActivity.class);
             startActivity(StartScoresActivity);
         }

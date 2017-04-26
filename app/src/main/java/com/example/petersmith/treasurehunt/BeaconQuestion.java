@@ -20,7 +20,7 @@ import com.example.petersmith.treasurehunt.QuestionData;
  * Created by peter.smith on 20/04/2017.
  */
 
-class BeaconQuestion extends QuestionData  implements ProxCallback {
+class BeaconQuestion extends QuestionData implements ProxCallback {
 
     private static final String TAG = "BeaconQuestion";
 
@@ -28,7 +28,35 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
     BeaconScan mBeaconScan;
     String mHintText,mAddress;
     MainActivity mActivity;
+    int mTickCheck = 0;
+    //ifs timer handling "good" state
+    boolean mOkay = false;
 
+    //for timer
+    Handler mTimerHdl;
+    Runnable beaconTimer = new Runnable() {
+        @Override
+        public void run() {
+            //set visible
+            TextView proxView = (TextView) mActivity.findViewById(R.id.QuestionText);
+            EditText answer = (EditText) mActivity.findViewById(R.id.answerText);
+
+            //set true idf we have had more than 1 good reading
+            if(mTickCheck > 1){
+                proxView.setText(mQuestion);
+                answer.setVisibility(View.VISIBLE);
+
+                //reschedule timer - stay good for at least this long
+                mTimerHdl.postDelayed(beaconTimer, 5000);
+                mOkay=true;
+            } else {
+                proxView.setText("");
+                mOkay=false;
+            }
+            //reset - don't reschedule
+            mTickCheck = 0;
+        }
+    };
 
     BeaconQuestion(String question,String answer,String hint,String address)
     {
@@ -42,14 +70,14 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
                 updateProx(message);
             }
         }*/
-
-        /*Initialise BT*/
-        mBeaconScan = new BeaconScan(this);
     }
 
     //called on UI thread.
     @Override
     public void renderQuestion(final MainActivity activity, LinearLayout layout){
+        /*Initialise BT*/
+        mBeaconScan = new BeaconScan(this);
+        mTimerHdl = new Handler();
         //set a layout to the passed in layout
         LayoutInflater inflater = LayoutInflater.from(activity);
         //final View inflatedLayout= inflater.inflate(R.layout.beacon_question, null, false);
@@ -60,8 +88,11 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
         layout.addView(inflatedLayout);
         TextView hintText = (TextView) activity.findViewById(R.id.ExtraText);
         hintText.setText(mHintText);
+        hintText.setVisibility(View.VISIBLE);
         TextView proxView = (TextView) activity.findViewById(R.id.QuestionText);
-        proxView.setBackgroundColor(Color.BLUE);
+        proxView.setBackgroundColor(activity.getColor(R.color.colorCold));
+        TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+        result.setVisibility(View.INVISIBLE);
         mActivity = activity;
         mBeaconScan.initBT(activity);
         //mBeaconScan.setUuid("00000000000000000000000000123456-0008-0008");
@@ -71,31 +102,30 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
 
         //same as TextQuestion
         final EditText answer = (EditText) inflatedLayout.findViewById(R.id.answerText);
+        answer.setVisibility(View.INVISIBLE);
 
         answer.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 Log.d(TAG, "onEditorAction " + actionId + ", " + keyEvent);
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d(TAG, "onEditorAction" + answer.getText().toString());
-                            TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
-                            if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
-                                result.setBackgroundColor(activity.getColor(R.color.colorRight));
-                                result.setText("CORRECT");
-                                result.setVisibility(View.VISIBLE);
-                                activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
-                                mBeaconScan.startLeScan(false);
-                            } else {
-                                result.setBackgroundColor(activity.getColor(R.color.colorWrong));
-                                result.setText("WRONG!");
-                                result.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    });
+                    Log.d(TAG, "onEditorAction" + answer.getText().toString());
+                    TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+                    if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
+                        result.setBackgroundColor(activity.getColor(R.color.colorRight));
+                        result.setText("CORRECT");
+                        result.setVisibility(View.VISIBLE);
+                        activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
+                        //Quit running tasks
+                        mBeaconScan.startLeScan(false);
+                        mTimerHdl.removeCallbacks(beaconTimer);
+                    } else {
+                        result.setBackgroundColor(activity.getColor(R.color.colorWrong));
+                        result.setText("WRONG!");
+                        result.setVisibility(View.VISIBLE);
+                    }
                 }
+
                 return false;
             }
         });
@@ -109,7 +139,7 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
             mActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    TextView proxView = (TextView)mActivity.findViewById(R.id.QuestionText);
+                    TextView proxView = (TextView) mActivity.findViewById(R.id.QuestionText);
                     //Change colour according to rssi (-60 being HOT, -80 = COLD)
                     int percent;
                     //int distance = (int) ConvertRssiToDistanceM(inner_rssi);
@@ -125,29 +155,20 @@ class BeaconQuestion extends QuestionData  implements ProxCallback {
                         percent = ((inner_rssi + 80) * 100) / (80-60);
                     }
 
-                    /*if (distance > 10) {
-                        percent = 0;
-                    }
-                    else if(distance < 1){
-                        percent = 100;
-                    }
-                    else
-                    {
-                        percent = 100 - (distance * 10);
-                    }
-                    Log.d(TAG,"distance = " + distance);*/
                     Log.d(TAG,"percent = " + percent);
-                    int bkColor = getColor(Color.BLUE,Color.RED,(float)percent/100);
+                    int bkColor = getColor(mActivity.getColor(R.color.colorCold),
+                            mActivity.getColor(R.color.colorHot),(float)percent/100);
                     Log.d(TAG,"bkColor = " + bkColor);
                     //need to check this!!
                     proxView.setBackgroundColor(bkColor);
-                    if(percent == 100){
-                        proxView.setText(mQuestion);
+                    if(percent == 100) {
+                        //try to smooth with timer.
+                        //if more than 1 100% reading in 2secs, then activate
+                        if(mTickCheck == 0 && !mOkay){
+                            mTimerHdl.postDelayed(beaconTimer, 2000);
+                        }
+                        mTickCheck++;
                     }
-                    else {
-                        proxView.setText("");
-                    }
-
                 }
             });
         }

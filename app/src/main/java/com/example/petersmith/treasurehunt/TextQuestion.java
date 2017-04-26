@@ -41,23 +41,18 @@ class TextQuestion extends QuestionData{
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 Log.d(TAG, "onEditorAction " + actionId + ", " + keyEvent);
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d(TAG, "onEditorAction" + answer.getText().toString());
-                            TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
-                            if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
-                                result.setBackgroundColor(activity.getColor(R.color.colorRight));
-                                result.setText("CORRECT");
-                                result.setVisibility(View.VISIBLE);
-                                activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
-                            } else {
-                                result.setBackgroundColor(activity.getColor(R.color.colorWrong));
-                                result.setText("WRONG!");
-                                result.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    });
+                    Log.d(TAG, "onEditorAction" + answer.getText().toString());
+                    TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+                    if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
+                        result.setBackgroundColor(activity.getColor(R.color.colorRight));
+                        result.setText("CORRECT");
+                        result.setVisibility(View.VISIBLE);
+                        activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
+                    } else {
+                        result.setBackgroundColor(activity.getColor(R.color.colorWrong));
+                        result.setText("WRONG!");
+                        result.setVisibility(View.VISIBLE);
+                    }
                 }
                 return false;
             }

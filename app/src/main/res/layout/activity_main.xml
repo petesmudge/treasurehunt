@@ -82,8 +82,8 @@
         android:id="@+id/QuestionLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/QuestionNum" />
 
     <Button
         android:id="@+id/nextQuestionBut"
@@ -96,6 +96,6 @@
         android:backgroundTint="@android:color/holo_blue_dark"
         android:text="Next Question >"
         android:textAppearance="@style/TextAppearance.AppCompat"
-        android:visibility="visible" />
+        android:visibility="invisible" />
 
 </RelativeLayout>
