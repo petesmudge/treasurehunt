@@ -58,6 +58,7 @@ public class HuntData {
     private int mIndex;
     private LoadedCallback mCallbackLoaded;
     private boolean mFinished = false;
+    private QuestionData mCurrQ = null;
     //private AsyncTask mAsyncTask;
 
     /* default constructor - not reversed */
@@ -66,9 +67,11 @@ public class HuntData {
         mCallbackLoaded = callback;
         mIndex = -1;
         mData = new ArrayList<QuestionData>();
+        mCurrQ = null;
         new GetDataTask().execute("http://www.phomic.co.uk/testdata.php?option=1");
     }
 
+    //Only called in constructor
     class GetDataTask extends AsyncTask<String, Void, Boolean> {
         protected Boolean doInBackground(String... urls) {
             URL url = null;
@@ -152,6 +155,8 @@ public class HuntData {
             mData.add(new TextQuestion(question,answer));
         } else if(type.equals("Q_BEACON")){
             mData.add(new BeaconQuestion(question,answer,hint,id));
+        } else if(type.equals("Q_NFC")){
+            mData.add(new NfcQuestion(question,answer));
         }
         //Other question types to follow
 
@@ -159,17 +164,16 @@ public class HuntData {
 
     /* Accessor functions */
     public QuestionData getNextQuestion(){
-        QuestionData q = null;
-
         if((mData != null )&& (++mIndex < mData.size()))
         {
-            q= mData.get(mIndex);
+            mCurrQ = mData.get(mIndex);
         }
         else
         {
+            mCurrQ = null;
             mFinished = true;
         }
-        return q;
+        return mCurrQ;
     }
 
     public int getNumber(){

@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,21 +21,19 @@ import android.widget.TextView;
 class TextQuestion extends QuestionData{
 
     private static final String TAG = "TextQuestion";
+    private View mView;
     //called on UI thread.
     @Override
-    public void renderQuestion(final MainActivity activity, LinearLayout layout){
+    public void renderQuestion(final Activity activity, LinearLayout layout){
         //set a layout to the passed in layout
         LayoutInflater inflater = LayoutInflater.from(activity);
-        final View inflatedLayout= inflater.inflate(R.layout.text_question, null, false);
-        if (layout.getChildCount() > 0) {
-            layout.removeView(layout.getFocusedChild());
-        }
-        layout.addView(inflatedLayout);
+        mView = inflater.inflate(R.layout.text_question, null, false);
+        layout.addView(mView);
 
-        TextView questionText = (TextView) inflatedLayout.findViewById(R.id.QuestionText);
+        TextView questionText = (TextView) mView.findViewById(R.id.QuestionText);
         questionText.setText(mQuestion);
 
-        final EditText answer = (EditText) inflatedLayout.findViewById(R.id.answerText);
+        final EditText answer = (EditText) mView.findViewById(R.id.answerText);
 
         answer.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -42,7 +41,7 @@ class TextQuestion extends QuestionData{
                 Log.d(TAG, "onEditorAction " + actionId + ", " + keyEvent);
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     Log.d(TAG, "onEditorAction" + answer.getText().toString());
-                    TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+                    TextView result = (TextView) mView.findViewById(R.id.resultText);
                     if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
                         result.setBackgroundColor(activity.getColor(R.color.colorRight));
                         result.setText("CORRECT");
@@ -65,6 +64,14 @@ class TextQuestion extends QuestionData{
     {
         initData(question,answer);
         mType = QuestionType.Q_TEXT;
+    }
+
+    public void cleanUp() {
+        if (mView != null) {
+            ViewGroup grp = (ViewGroup)mView.getParent();
+            grp.removeView(mView);
+        }
+        mView = null;
     }
 
 

@@ -1,13 +1,16 @@
 package com.example.petersmith.treasurehunt;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Layout;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -27,10 +30,11 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
     //Handler.Callback mCallback;
     BeaconScan mBeaconScan;
     String mHintText,mAddress;
-    MainActivity mActivity;
+    Activity mActivity;
     int mTickCheck = 0;
     //ifs timer handling "good" state
     boolean mOkay = false;
+    View mView;
 
     //for timer
     Handler mTimerHdl;
@@ -64,34 +68,34 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
         mHintText = hint;
         mAddress = address;
         mType = QuestionType.Q_BEACON;
-        /*mCallback = new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message message) {
-                updateProx(message);
-            }
-        }*/
     }
 
     //called on UI thread.
     @Override
-    public void renderQuestion(final MainActivity activity, LinearLayout layout){
+    public void renderQuestion(final Activity activity, LinearLayout layout){
         /*Initialise BT*/
         mBeaconScan = new BeaconScan(this);
         mTimerHdl = new Handler();
         //set a layout to the passed in layout
         LayoutInflater inflater = LayoutInflater.from(activity);
         //final View inflatedLayout= inflater.inflate(R.layout.beacon_question, null, false);
-        final View inflatedLayout= inflater.inflate(R.layout.text_question, null, false);
-        if (layout.getChildCount() > 0) {
-            layout.removeView(layout.getFocusedChild());
-        }
-        layout.addView(inflatedLayout);
+        mView = inflater.inflate(R.layout.text_question, null, false);
+
+        /*mLayout = layout;
+        //added in now? TODO
+        if (mLayout.getChildCount() > 0) {
+            mLayout.removeView(mLayout.getFocusedChild());
+        }*/
+        //test this
+
+        layout.addView(mView);
+
         TextView hintText = (TextView) activity.findViewById(R.id.ExtraText);
         hintText.setText(mHintText);
         hintText.setVisibility(View.VISIBLE);
         TextView proxView = (TextView) activity.findViewById(R.id.QuestionText);
         proxView.setBackgroundColor(activity.getColor(R.color.colorCold));
-        TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+        TextView result = (TextView) mView.findViewById(R.id.resultText);
         result.setVisibility(View.INVISIBLE);
         mActivity = activity;
         mBeaconScan.initBT(activity);
@@ -101,7 +105,7 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
         mBeaconScan.startLeScan(true);
 
         //same as TextQuestion
-        final EditText answer = (EditText) inflatedLayout.findViewById(R.id.answerText);
+        final EditText answer = (EditText) mView.findViewById(R.id.answerText);
         answer.setVisibility(View.INVISIBLE);
 
         answer.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -110,15 +114,15 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
                 Log.d(TAG, "onEditorAction " + actionId + ", " + keyEvent);
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     Log.d(TAG, "onEditorAction" + answer.getText().toString());
-                    TextView result = (TextView) inflatedLayout.findViewById(R.id.resultText);
+                    TextView result = (TextView) mView.findViewById(R.id.resultText);
                     if (answer.getText().toString().equalsIgnoreCase(mAnswer)) {
                         result.setBackgroundColor(activity.getColor(R.color.colorRight));
                         result.setText("CORRECT");
                         result.setVisibility(View.VISIBLE);
                         activity.findViewById(R.id.nextQuestionBut).setVisibility(View.VISIBLE);
                         //Quit running tasks
-                        mBeaconScan.startLeScan(false);
-                        mTimerHdl.removeCallbacks(beaconTimer);
+                        //This is fine if we get here, but who cleans up if sent to background, etc?
+                        //cleanUp();
                     } else {
                         result.setBackgroundColor(activity.getColor(R.color.colorWrong));
                         result.setText("WRONG!");
@@ -173,6 +177,18 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
             });
         }
 
+    }
+
+    public void cleanUp() {
+        mBeaconScan.startLeScan(false);
+        mBeaconScan = null;
+        mTimerHdl.removeCallbacks(beaconTimer);
+        mTimerHdl = null;
+        if (mView != null) {
+            ViewGroup grp = (ViewGroup)mView.getParent();
+            grp.removeView(mView);
+        }
+        mView = null;
     }
 /*
     private double ConvertRssiToDistanceM(int rssi){

@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     Chronometer mTimer;
     ProgressBar mProgress;
     HighScoresDb mHighScores;
+    QuestionData mCurrQ;
 
     SharedPreferences mPrefs;
     public static final String PREFS_NAME = "treasurehunt_prefs";
@@ -125,22 +126,27 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     @Override
     protected void onStop() {
         super.onStop();
+        if(mCurrQ != null)
+            mCurrQ.cleanUp();
         //if (mAuthListener != null) {
         //    mAuth.removeAuthStateListener(mAuthListener);
         //}
     }
 
-    //always called from UI Thread.
+    //always called from UI Thread (when huntData db has finished being loaded)
     public void IsLoaded(){
         updateQuestion();
     }
 
 
     void updateQuestion() {
-        QuestionData q = mHuntData.getNextQuestion();
-        long currentRow = 0;
-        if (q != null) {
-            q.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
+        //do any clean up needed
+        if(mCurrQ != null)
+            mCurrQ.cleanUp();
+        //now get next question
+        mCurrQ = mHuntData.getNextQuestion();
+        if (mCurrQ != null) {
+            mCurrQ.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
             int a = mHuntData.getNumber();
             mQuestionNum.setText(Integer.toString(a));
             updateProgress(mHuntData.getProgress());
@@ -148,17 +154,7 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
             Toast.makeText(this, "You have finished!", Toast.LENGTH_SHORT).show();
             mTimer.stop();
             /*Store time somewhere? */
-            SQLiteDatabase db = mHighScores.getWritableDatabase();
-            //Add check for DB size TODO
-
-            ContentValues vals = new ContentValues();
-            vals.put(ScoresContract.ScoresEntry.PLAYER_NAME, mPrefs.getString(getString(R.string.username),"Nobody"));
-            vals.put(ScoresContract.ScoresEntry.PLAYER_TIME, (String) mTimer.getText());
-            //keep a reference to the current time
-            currentRow = db.insert(ScoresContract.ScoresEntry.TABLE_NAME,null,vals);
-            SharedPreferences.Editor editor = mPrefs.edit();
-            editor.putString(getString(R.string.currentRow), Long.toString(currentRow));
-            editor.apply();
+            addScoreToDB();
             updateProgress(100);
 
             // Jump to Top scores screen
@@ -168,6 +164,22 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     }
 
     private void updateProgress(int progress){ mProgress.setProgress(progress);}
+
+    private void addScoreToDB(){
+        long currentRow = 0;
+
+        SQLiteDatabase db = mHighScores.getWritableDatabase();
+        //Add check for DB size TODO
+
+        ContentValues vals = new ContentValues();
+        vals.put(ScoresContract.ScoresEntry.PLAYER_NAME, mPrefs.getString(getString(R.string.username),"Nobody"));
+        vals.put(ScoresContract.ScoresEntry.PLAYER_TIME, (String) mTimer.getText());
+        //keep a reference to the current time
+        currentRow = db.insert(ScoresContract.ScoresEntry.TABLE_NAME,null,vals);
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(getString(R.string.currentRow), Long.toString(currentRow));
+        editor.apply();
+    }
 
     //BT stuff
     private BluetoothAdapter mBTAdapter;

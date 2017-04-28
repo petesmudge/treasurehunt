@@ -8,6 +8,9 @@ import android.widget.LinearLayout;
  * Created by peter.smith on 14/02/2017.
  */
 
+//basic data type, but with functions that render sepcific views and functionality for different questions.
+//Nee to ensure if "renderQuestion()" is called, then "cleanUp()" is called if
+
 public abstract class QuestionData {
 
     public enum QuestionType {
@@ -36,7 +39,7 @@ public abstract class QuestionData {
         return mType;
     }
 
-    public abstract void renderQuestion(final MainActivity activity, LinearLayout layout);
-
+    public abstract void renderQuestion(final Activity activity, LinearLayout layout);
+    public abstract void cleanUp();
 
 }
