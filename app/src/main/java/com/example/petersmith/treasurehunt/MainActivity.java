@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     SharedPreferences mPrefs;
     public static final String PREFS_NAME = "treasurehunt_prefs";
 
+    public static final String STATE_QUESTION_NUM = "StateQnum";
     //For BT/Beacon
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_COARSE_BL = 2;
@@ -106,15 +107,13 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     @Override
     public void onStart() {
         super.onStart();
-        //mAuth.addAuthStateListener(mAuthListener);
+        /* Render Question */
+        renderQuestion();
     }
     @Override
     protected void onResume() {
         super.onResume();
 
-        /* Load State*/
-
-        /* Render Question */
     }
 
     @Override
@@ -126,11 +125,10 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
     @Override
     protected void onStop() {
         super.onStop();
+        //cleanup Ongoing actions (i.e. NFC or Beacon scanning)
+        //to have this here need to handle views properly on resume not on Create
         if(mCurrQ != null)
             mCurrQ.cleanUp();
-        //if (mAuthListener != null) {
-        //    mAuth.removeAuthStateListener(mAuthListener);
-        //}
     }
 
     //always called from UI Thread (when huntData db has finished being loaded)
@@ -146,11 +144,9 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
         //now get next question
         mCurrQ = mHuntData.getNextQuestion();
         if (mCurrQ != null) {
-            mCurrQ.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
-            int a = mHuntData.getNumber();
-            mQuestionNum.setText(Integer.toString(a));
-            updateProgress(mHuntData.getProgress());
+            renderQuestion();
         } else {
+            //goto scores - have finished!
             Toast.makeText(this, "You have finished!", Toast.LENGTH_SHORT).show();
             mTimer.stop();
             /*Store time somewhere? */
@@ -161,6 +157,35 @@ public class MainActivity extends AppCompatActivity implements LoadedCallback {
             Intent StartScoresActivity = new Intent(MainActivity.this, ScoresActivity.class);
             startActivity(StartScoresActivity);
         }
+    }
+
+    private void renderQuestion(){
+        if(mCurrQ != null)
+        {
+            mCurrQ.renderQuestion(this,(LinearLayout) findViewById(R.id.QuestionLayout));
+            int a = mHuntData.getNumber();
+            mQuestionNum.setText(String.format("%d",a));
+            updateProgress(mHuntData.getProgress());
+        }
+        /*if(findViewById(R.id.QuestionLayout) != null){
+            //Fragment questionFragment;
+            switch(mCurrQ.getType()){
+                case Q_BEACON:
+                    BeaconFragment fragment =  BeaconFragment.newInstance();
+                    getSupportFragmentManager().beginTransaction().replace(R.id.QuestionLayout,fragment).commit();
+                    break;
+                case Q_NFC:
+                    //NfcFragment fragment =  BeaconFragment.newInstance();
+                    //getSupportFragmentManager().beginTransaction().replace(R.id.QuestionLayout,fragment).commit();
+                    break;
+                case Q_IMAGE:
+                    break;
+                default: //fall through to text
+                case Q_TEXT:
+                    break;
+            }
+            //getSupportFragmentManager().beginTransaction().add(R.id.QuestionLayout,questionFragment).commit();
+        */
     }
 
     private void updateProgress(int progress){ mProgress.setProgress(progress);}

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +18,7 @@ public class StartActivity extends AppCompatActivity {
     SharedPreferences mPrefs;
     EditText mName;
     HighScoresDb mDb;
+    public final static String TAG = "StartActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,5 +52,6 @@ public class StartActivity extends AppCompatActivity {
                 mDb.cleanDb(db);
             }
         });
+
     }
 }

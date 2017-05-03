@@ -33,7 +33,7 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
     Activity mActivity;
     int mTickCheck = 0;
     //ifs timer handling "good" state
-    boolean mOkay = false;
+    private boolean mOkay = false;
     View mView;
 
     //for timer
@@ -182,8 +182,14 @@ class BeaconQuestion extends QuestionData implements ProxCallback {
     public void cleanUp() {
         mBeaconScan.startLeScan(false);
         mBeaconScan = null;
+
+        //timer vars
         mTimerHdl.removeCallbacks(beaconTimer);
         mTimerHdl = null;
+        mTickCheck = 0;
+        mOkay = false;
+
+        //view vars
         if (mView != null) {
             ViewGroup grp = (ViewGroup)mView.getParent();
             grp.removeView(mView);

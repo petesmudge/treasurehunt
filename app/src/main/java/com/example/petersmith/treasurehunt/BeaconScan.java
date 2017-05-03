@@ -90,7 +90,7 @@ public class BeaconScan {
             //Print the advertising String in the LOG with other device info (ADDRESS - RSSI - ADVERTISING - NAME)
             //Log.i(TAG, result.getDevice().getAddress()+" - RSSI: "+result.getRssi()+"\t - "+advertisingString+" - "+result.getDevice().getName());
 
-            //Log.i(TAG,"UID = "+ mUuid);
+            Log.i(TAG,"UID = "+ mUuid);
             //if (advertisingString.contains(mUuid.replace("-",""))) {
               if(result.getDevice().getAddress().contains(mAddress) && advertisingString.contains(mUuid.replace("-",""))) {
                 mCallback.CallbackRssi(result.getRssi());

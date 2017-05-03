@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import static com.example.petersmith.treasurehunt.Helper.DEBUG;
+
 /**
  * Created by peter.smith on 27/04/2017.
  */
@@ -61,7 +63,11 @@ class NfcQuestion extends QuestionData implements NfcReaderCallback.TagIdCallbac
                     //Quit running tasks is done in cleanUp()
                 } else {
                     result.setBackgroundColor(mActivity.getColor(R.color.colorWrong));
-                    result.setText("WRONG!");
+                    if(DEBUG){
+                        result.setText(tag);
+                    } else {
+                        result.setText("WRONG! ");
+                    }
                     result.setVisibility(View.VISIBLE);
                 }
             }
@@ -70,10 +76,6 @@ class NfcQuestion extends QuestionData implements NfcReaderCallback.TagIdCallbac
 
     public void cleanUp(){
         disableReaderMode();
-//        if (mLayout.getChildCount() > 0) {
-//            mLayout.removeView(mLayout.getFocusedChild());
-//        }
-//        mLayout = null;
         if (mView != null) {
             ViewGroup grp = (ViewGroup)mView.getParent();
             grp.removeView(mView);
